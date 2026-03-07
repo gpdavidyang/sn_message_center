@@ -172,12 +172,12 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">안녕하세요! SparkNova Message Center입니다.</h2>
-        <p className="mt-1 text-gray-600">메시지 발송 현황을 한눈에 확인하세요.</p>
+        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">안녕하세요! SparkNova Message Center입니다.</h2>
+        <p className="mt-1 text-sm text-gray-600 sm:text-base">메시지 발송 현황을 한눈에 확인하세요.</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-8 sm:gap-4 lg:grid-cols-5">
         {[
           { title: '총 캠페인', value: totalCampaigns, icon: MessageSquare, color: 'text-blue-600', bg: 'bg-blue-50' },
           { title: '발송 성공', value: totalSent, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
@@ -185,25 +185,25 @@ export default function DashboardPage() {
           { title: '연락처', value: totalContacts, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { title: '예약 대기', value: scheduledCount, icon: Clock, color: 'text-purple-600', bg: 'bg-purple-50' },
         ].map((card) => (
-          <div key={card.title} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className={`rounded-lg p-2.5 ${card.bg}`}>
-                <card.icon className={`h-5 w-5 ${card.color}`} />
+          <div key={card.title} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-5">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className={`rounded-lg p-2 sm:p-2.5 ${card.bg}`}>
+                <card.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${card.color}`} />
               </div>
               <div>
-                <p className="text-xs text-gray-500">{card.title}</p>
-                <p className="text-xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-[10px] text-gray-500 sm:text-xs">{card.title}</p>
+                <p className="text-lg font-bold text-gray-900 sm:text-xl">{card.value}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Left: Chart + Success Rate */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-4 sm:space-y-6 lg:col-span-2">
           {/* Daily chart */}
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="mb-4 flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-600" />
               <h3 className="text-lg font-semibold text-gray-900">최근 7일 발송 추이</h3>
@@ -227,8 +227,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Success rate + SOLAPI balance */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
               <h4 className="mb-3 text-sm font-medium text-gray-500">발송 성공률</h4>
               <div className="flex items-center gap-4">
                 <div className="relative h-20 w-20">
@@ -254,7 +254,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
               <h4 className="mb-3 text-sm font-medium text-gray-500">SOLAPI 잔액</h4>
               {balance ? (
                 <p className="text-2xl font-bold text-gray-900">{balance}</p>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right: Recent campaigns */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">최근 캠페인</h3>
             <Link href="/messages/campaigns" className="text-xs text-blue-600 hover:underline">전체 보기</Link>

@@ -250,7 +250,7 @@ export default function HubSpotContactsPage() {
   return (
     <div>
       {/* Top Bar: Search + Actions */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <form onSubmit={handleSearch} className="flex flex-1 gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -282,23 +282,26 @@ export default function HubSpotContactsPage() {
           )}
         </button>
 
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? '동기화 중...' : '전체 동기화'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{syncing ? '동기화 중...' : '전체 동기화'}</span>
+            <span className="sm:hidden">{syncing ? '...' : '동기화'}</span>
+          </button>
 
-        <button
-          onClick={handleImport}
-          disabled={selected.size === 0 || importing}
-          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-        >
-          {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-          선택 가져오기 ({selected.size})
-        </button>
+          <button
+            onClick={handleImport}
+            disabled={selected.size === 0 || importing}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:px-4"
+          >
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            <span className="hidden sm:inline">선택 가져오기</span> ({selected.size})
+          </button>
+        </div>
       </div>
 
       {/* Advanced Filters Panel */}
@@ -481,10 +484,10 @@ export default function HubSpotContactsPage() {
                   <input type="checkbox" checked={contacts.length > 0 && selected.size === contacts.length} onChange={toggleAll} className="rounded border-gray-300" />
                 </th>
                 <th className="px-4 py-3 font-medium text-gray-600">이름</th>
-                <th className="px-4 py-3 font-medium text-gray-600">이메일</th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 sm:table-cell">이메일</th>
                 <th className="px-4 py-3 font-medium text-gray-600">전화번호</th>
-                <th className="px-4 py-3 font-medium text-gray-600">회사</th>
-                <th className="px-4 py-3 font-medium text-gray-600">단계</th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">회사</th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">단계</th>
               </tr>
             </thead>
             <tbody>
@@ -511,10 +514,10 @@ export default function HubSpotContactsPage() {
                       <input type="checkbox" checked={selected.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-gray-300" />
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-900">{contact.properties.firstname || ''} {contact.properties.lastname || ''}</td>
-                    <td className="px-4 py-3 text-gray-600">{contact.properties.email || '-'}</td>
+                    <td className="hidden px-4 py-3 text-gray-600 sm:table-cell">{contact.properties.email || '-'}</td>
                     <td className="px-4 py-3 text-gray-600">{contact.properties.phone || '-'}</td>
-                    <td className="px-4 py-3 text-gray-600">{contact.properties.company || '-'}</td>
-                    <td className="px-4 py-3">
+                    <td className="hidden px-4 py-3 text-gray-600 md:table-cell">{contact.properties.company || '-'}</td>
+                    <td className="hidden px-4 py-3 lg:table-cell">
                       {contact.properties.lifecyclestage && (
                         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{contact.properties.lifecyclestage}</span>
                       )}

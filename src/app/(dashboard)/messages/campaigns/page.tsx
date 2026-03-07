@@ -213,49 +213,83 @@ export default function CampaignsPage() {
           <p className="mt-2 text-gray-500">검색 결과가 없습니다.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 font-medium text-gray-600">캠페인명</th>
-                <th className="px-4 py-3 font-medium text-gray-600">유형</th>
-                <th className="px-4 py-3 font-medium text-gray-600">상태</th>
-                <th className="px-4 py-3 font-medium text-gray-600">발송</th>
-                <th className="px-4 py-3 font-medium text-gray-600">성공/실패</th>
-                <th className="px-4 py-3 font-medium text-gray-600">발송일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <Link href={`/messages/campaigns/${c.id}`} className="font-medium text-blue-600 hover:underline">
-                      {c.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{c.type}</td>
-                  <td className="px-4 py-3">
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
-                      {statusLabels[c.status] || c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{c.total_count}건</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <span className="text-green-600">{c.success_count}</span>
-                    {' / '}
-                    <span className="text-red-600">{c.fail_count}</span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">
-                    {c.status === 'scheduled' && c.scheduled_at
-                      ? `📅 ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
-                      : c.sent_at
-                        ? new Date(c.sent_at).toLocaleDateString('ko-KR')
-                        : '-'}
-                  </td>
+        {/* Mobile: Card layout */}
+        <div className="space-y-3 sm:hidden">
+          {filtered.map((c) => (
+            <Link
+              key={c.id}
+              href={`/messages/campaigns/${c.id}`}
+              className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-gray-900 truncate">{c.name}</p>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
+                  {statusLabels[c.status] || c.status}
+                </span>
+              </div>
+              <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                <span>{c.type}</span>
+                <span>{c.total_count}건</span>
+                <span className="text-green-600">{c.success_count}성공</span>
+                <span className="text-red-600">{c.fail_count}실패</span>
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                {c.status === 'scheduled' && c.scheduled_at
+                  ? `예약: ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
+                  : c.sent_at
+                    ? new Date(c.sent_at).toLocaleDateString('ko-KR')
+                    : '-'}
+              </p>
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop: Table layout */}
+        <div className="hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:block">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-gray-200 bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 font-medium text-gray-600">캠페인명</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">유형</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">상태</th>
+                  <th className="px-4 py-3 font-medium text-gray-600">발송</th>
+                  <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">성공/실패</th>
+                  <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">발송일</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((c) => (
+                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <Link href={`/messages/campaigns/${c.id}`} className="font-medium text-blue-600 hover:underline">
+                        {c.name}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{c.type}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
+                        {statusLabels[c.status] || c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{c.total_count}건</td>
+                    <td className="hidden px-4 py-3 text-gray-600 md:table-cell">
+                      <span className="text-green-600">{c.success_count}</span>
+                      {' / '}
+                      <span className="text-red-600">{c.fail_count}</span>
+                    </td>
+                    <td className="hidden px-4 py-3 text-gray-500 lg:table-cell">
+                      {c.status === 'scheduled' && c.scheduled_at
+                        ? `📅 ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
+                        : c.sent_at
+                          ? new Date(c.sent_at).toLocaleDateString('ko-KR')
+                          : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

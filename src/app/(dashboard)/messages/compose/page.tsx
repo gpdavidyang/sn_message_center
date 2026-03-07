@@ -250,9 +250,9 @@ function ComposeMessageContent() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Left: Message Editor */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">메시지 작성</h3>
             <div className="flex gap-2">
@@ -440,7 +440,7 @@ function ComposeMessageContent() {
         </div>
 
         {/* Right: Recipients */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">수신자 ({recipients.length}명)</h3>
             {recipients.length > 0 && (

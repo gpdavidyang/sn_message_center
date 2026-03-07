@@ -99,8 +99,8 @@ export default function UserManagementPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-gray-600">소수 테스트 사용자를 초대하고 관리하세요.</p>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-gray-600 sm:text-base">소수 테스트 사용자를 초대하고 관리하세요.</p>
         <button
           onClick={() => setShowInvite(!showInvite)}
           className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
@@ -168,51 +168,87 @@ export default function UserManagementPage() {
         <div className="border-b border-gray-200 px-4 py-3">
           <h3 className="font-semibold text-gray-900">등록된 사용자 ({users.length}명)</h3>
         </div>
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-gray-200 bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 font-medium text-gray-600">이름</th>
-              <th className="px-4 py-3 font-medium text-gray-600">이메일</th>
-              <th className="px-4 py-3 font-medium text-gray-600">역할</th>
-              <th className="px-4 py-3 font-medium text-gray-600">상태</th>
-              <th className="px-4 py-3 font-medium text-gray-600">마지막 로그인</th>
-              <th className="px-4 py-3 font-medium text-gray-600">가입일</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map(u => (
-              <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">{u.full_name || '-'}</td>
-                <td className="px-4 py-3 text-gray-700">{u.email}</td>
-                <td className="px-4 py-3">
-                  <select
-                    value={u.role}
-                    onChange={(e) => changeRole(u.id, e.target.value)}
-                    className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="admin">관리자</option>
-                    <option value="member">일반</option>
-                  </select>
-                </td>
-                <td className="px-4 py-3">
-                  {u.email_confirmed ? (
-                    <span className="flex items-center gap-1 text-xs text-green-600">
-                      <ShieldCheck className="h-3.5 w-3.5" /> 활성
-                    </span>
-                  ) : (
-                    <span className="text-xs text-yellow-600">초대 대기</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-xs">
-                  {u.last_sign_in ? new Date(u.last_sign_in).toLocaleString('ko-KR') : '-'}
-                </td>
-                <td className="px-4 py-3 text-gray-500 text-xs">
-                  {new Date(u.created_at).toLocaleDateString('ko-KR')}
-                </td>
+
+        {/* Mobile: Card layout */}
+        <div className="divide-y divide-gray-100 sm:hidden">
+          {users.map(u => (
+            <div key={u.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-gray-900">{u.full_name || '-'}</p>
+                {u.email_confirmed ? (
+                  <span className="flex items-center gap-1 text-xs text-green-600">
+                    <ShieldCheck className="h-3.5 w-3.5" /> 활성
+                  </span>
+                ) : (
+                  <span className="text-xs text-yellow-600">초대 대기</span>
+                )}
+              </div>
+              <p className="mt-0.5 text-sm text-gray-500">{u.email}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <select
+                  value={u.role}
+                  onChange={(e) => changeRole(u.id, e.target.value)}
+                  className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="admin">관리자</option>
+                  <option value="member">일반</option>
+                </select>
+                <span className="text-xs text-gray-400">
+                  {u.last_sign_in ? `최근: ${new Date(u.last_sign_in).toLocaleDateString('ko-KR')}` : '미접속'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: Table layout */}
+        <div className="hidden overflow-x-auto sm:block">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-gray-200 bg-gray-50">
+              <tr>
+                <th className="px-4 py-3 font-medium text-gray-600">이름</th>
+                <th className="px-4 py-3 font-medium text-gray-600">이메일</th>
+                <th className="px-4 py-3 font-medium text-gray-600">역할</th>
+                <th className="px-4 py-3 font-medium text-gray-600">상태</th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">마지막 로그인</th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">가입일</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-900">{u.full_name || '-'}</td>
+                  <td className="px-4 py-3 text-gray-700">{u.email}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={u.role}
+                      onChange={(e) => changeRole(u.id, e.target.value)}
+                      className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-900 focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="admin">관리자</option>
+                      <option value="member">일반</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.email_confirmed ? (
+                      <span className="flex items-center gap-1 text-xs text-green-600">
+                        <ShieldCheck className="h-3.5 w-3.5" /> 활성
+                      </span>
+                    ) : (
+                      <span className="text-xs text-yellow-600">초대 대기</span>
+                    )}
+                  </td>
+                  <td className="hidden px-4 py-3 text-gray-500 text-xs md:table-cell">
+                    {u.last_sign_in ? new Date(u.last_sign_in).toLocaleString('ko-KR') : '-'}
+                  </td>
+                  <td className="hidden px-4 py-3 text-gray-500 text-xs lg:table-cell">
+                    {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
