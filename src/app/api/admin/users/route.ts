@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-)
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
 
 // GET: 회원 목록 조회 (admin only)
 export async function GET() {
@@ -33,7 +35,7 @@ export async function GET() {
       .order('created_at', { ascending: false })
 
     // Get auth users for email info
-    const { data: { users: authUsers } } = await supabaseAdmin.auth.admin.listUsers()
+    const { data: { users: authUsers } } = await getSupabaseAdmin().auth.admin.listUsers()
 
     const enrichedProfiles = (profiles || []).map(p => {
       const authUser = authUsers?.find(u => u.id === p.id)
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user via admin API with invite
-    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+    const { data, error } = await getSupabaseAdmin().auth.admin.inviteUserByEmail(email, {
       data: { full_name: fullName || email, role: role || 'member' },
     })
 
@@ -117,7 +119,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: '자신의 역할은 변경할 수 없습니다.' }, { status: 400 })
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('profiles')
       .update({ role })
       .eq('id', userId)
