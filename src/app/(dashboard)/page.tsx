@@ -172,7 +172,7 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">안녕하세요! SparkNova Message Center입니다.</h2>
+        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">안녕하세요! M-Keter Message Center입니다.</h2>
         <p className="mt-1 text-sm text-gray-600 sm:text-base">메시지 발송 현황을 한눈에 확인하세요.</p>
       </div>
 

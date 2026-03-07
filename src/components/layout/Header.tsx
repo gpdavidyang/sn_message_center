@@ -18,7 +18,7 @@ const pageTitles: Record<string, string> = {
 
 export default function Header() {
   const pathname = usePathname()
-  const title = pageTitles[pathname] || 'SparkNova Message Center'
+  const title = pageTitles[pathname] || 'M-Keter Message Center'
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 sm:h-16 sm:px-6">

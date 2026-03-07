@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Send, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -38,11 +38,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <Send className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">SparkNova</span>
+          <div className="mb-3 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mketer.png" alt="M-Keter" className="h-16 w-16 rounded-full" />
           </div>
-          <p className="text-gray-600">Message Center에 로그인하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">M-Keter</h1>
+          <p className="mt-1 text-gray-600">Message Center에 로그인하세요</p>
         </div>
 
         {/* Form */}
@@ -116,6 +117,16 @@ export default function LoginPage() {
             </Link>
           </div>
         </form>
+
+        {/* Footer */}
+        <div className="mt-6 flex flex-col items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-sparknova.png" alt="SparkNova" className="h-4" />
+            <span className="text-xs text-gray-400">powered by SparkNova</span>
+          </div>
+          <span className="text-[10px] text-gray-300">All Rights Reserved &copy; SparkNova</span>
+        </div>
       </div>
     </div>
   )

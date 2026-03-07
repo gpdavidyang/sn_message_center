@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Search, Download, Users, Loader2, ChevronLeft, ChevronRight,
   MessageSquare, MessageCircle, X, RefreshCw, Filter,
-  Phone as PhoneIcon
+  Phone as PhoneIcon, ArrowUpDown, ArrowUp, ArrowDown
 } from 'lucide-react'
 import { LIFECYCLE_STAGES, buildHubSpotFilters, type AdvancedFilterOptions } from '@/lib/hubspot/filter-builder'
 
@@ -47,6 +47,47 @@ export default function HubSpotContactsPage() {
   const [createdAfter, setCreatedAfter] = useState('')
   const [createdBefore, setCreatedBefore] = useState('')
   const activeFilterCount = [company, lifecyclestage, phoneExists !== undefined ? 'x' : '', createdAfter, createdBefore].filter(Boolean).length
+
+  // 정렬 상태
+  type SortKey = 'name' | 'email' | 'phone' | 'company' | 'lifecyclestage'
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+  }
+
+  const getSortValue = (contact: HubSpotContact, key: SortKey): string => {
+    const p = contact.properties
+    switch (key) {
+      case 'name': return `${p.firstname || ''} ${p.lastname || ''}`.trim().toLowerCase()
+      case 'email': return (p.email || '').toLowerCase()
+      case 'phone': return p.phone || ''
+      case 'company': return (p.company || '').toLowerCase()
+      case 'lifecyclestage': return (p.lifecyclestage || '').toLowerCase()
+    }
+  }
+
+  const sortedContacts = sortKey
+    ? [...contacts].sort((a, b) => {
+        const aVal = getSortValue(a, sortKey)
+        const bVal = getSortValue(b, sortKey)
+        const cmp = aVal.localeCompare(bVal, 'ko')
+        return sortDir === 'asc' ? cmp : -cmp
+      })
+    : contacts
+
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortKey !== column) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-gray-400" />
+    return sortDir === 'asc'
+      ? <ArrowUp className="ml-1 inline h-3 w-3 text-blue-600" />
+      : <ArrowDown className="ml-1 inline h-3 w-3 text-blue-600" />
+  }
 
   // 동기화 상태
   const [syncing, setSyncing] = useState(false)
@@ -483,11 +524,31 @@ export default function HubSpotContactsPage() {
                 <th className="px-4 py-3">
                   <input type="checkbox" checked={contacts.length > 0 && selected.size === contacts.length} onChange={toggleAll} className="rounded border-gray-300" />
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600">이름</th>
-                <th className="hidden px-4 py-3 font-medium text-gray-600 sm:table-cell">이메일</th>
-                <th className="px-4 py-3 font-medium text-gray-600">전화번호</th>
-                <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">회사</th>
-                <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">단계</th>
+                <th className="px-4 py-3 font-medium text-gray-600">
+                  <button onClick={() => handleSort('name')} className="inline-flex items-center hover:text-gray-900">
+                    이름 <SortIcon column="name" />
+                  </button>
+                </th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 sm:table-cell">
+                  <button onClick={() => handleSort('email')} className="inline-flex items-center hover:text-gray-900">
+                    이메일 <SortIcon column="email" />
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-medium text-gray-600">
+                  <button onClick={() => handleSort('phone')} className="inline-flex items-center hover:text-gray-900">
+                    전화번호 <SortIcon column="phone" />
+                  </button>
+                </th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">
+                  <button onClick={() => handleSort('company')} className="inline-flex items-center hover:text-gray-900">
+                    회사 <SortIcon column="company" />
+                  </button>
+                </th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">
+                  <button onClick={() => handleSort('lifecyclestage')} className="inline-flex items-center hover:text-gray-900">
+                    단계 <SortIcon column="lifecyclestage" />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -508,7 +569,7 @@ export default function HubSpotContactsPage() {
                   </td>
                 </tr>
               ) : (
-                contacts.map((contact) => (
+                sortedContacts.map((contact) => (
                   <tr key={contact.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <input type="checkbox" checked={selected.has(contact.id)} onChange={() => toggleSelect(contact.id)} className="rounded border-gray-300" />

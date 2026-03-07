@@ -92,11 +92,14 @@ export default function Sidebar() {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
+      <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
         <div className="flex items-center gap-2">
-          <Send className="h-6 w-6 text-blue-600" />
-          <span className="text-lg font-bold text-gray-900">SparkNova</span>
-          <span className="text-xs text-gray-500">Message</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mketer.png" alt="M-Keter" className="h-9 w-9 rounded-full" />
+          <div className="flex flex-col">
+            <span className="text-base font-bold leading-tight text-gray-900">M-Keter</span>
+            <span className="text-[10px] leading-tight text-gray-400">Message Center</span>
+          </div>
         </div>
         {/* Mobile close button */}
         <button
@@ -153,7 +156,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Logout */}
+      {/* Logout + Footer */}
       <div className="border-t border-gray-200 p-3">
         <button
           onClick={handleLogout}
@@ -162,6 +165,14 @@ export default function Sidebar() {
           <LogOut className="h-5 w-5" />
           로그아웃
         </button>
+        <div className="mt-2 flex flex-col items-center gap-1 px-3 pb-1">
+          <div className="flex items-center gap-1.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-sparknova.png" alt="SparkNova" className="h-4" />
+            <span className="text-[10px] text-gray-400">powered by SparkNova</span>
+          </div>
+          <span className="text-[9px] text-gray-300">All Rights Reserved &copy; SparkNova</span>
+        </div>
       </div>
     </>
   )

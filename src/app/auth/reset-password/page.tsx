@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Send, Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -109,11 +109,12 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            <Send className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-gray-900">SparkNova</span>
+          <div className="mb-3 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mketer.png" alt="M-Keter" className="h-16 w-16 rounded-full" />
           </div>
-          <p className="text-gray-600">새 비밀번호를 입력하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">M-Keter</h1>
+          <p className="mt-1 text-gray-600">새 비밀번호를 입력하세요</p>
         </div>
 
         {/* Form */}
