@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Send, Loader2, Plus, X, Phone, ChevronDown, Upload, FileSpreadsheet, Save, BookOpen, Clock, Trash2 } from 'lucide-react'
 import { getByteLength, getMessageType } from '@/lib/utils/byte-counter'
@@ -23,7 +23,7 @@ interface Template {
   created_at: string
 }
 
-export default function ComposeMessagePage() {
+function ComposeMessageContent() {
   const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [type, setType] = useState<'SMS' | 'LMS'>('SMS')
@@ -541,5 +541,13 @@ export default function ComposeMessagePage() {
         </button>
       </div>
     </div>
+  )
+}
+
+export default function ComposeMessagePage() {
+  return (
+    <Suspense fallback={<div className="py-12 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400" /></div>}>
+      <ComposeMessageContent />
+    </Suspense>
   )
 }
