@@ -1,0 +1,162 @@
+import { generateSolapiAuth } from './auth'
+
+const SOLAPI_BASE_URL = 'https://api.solapi.com'
+
+function getHeaders() {
+  return {
+    ...generateSolapiAuth(),
+    'Content-Type': 'application/json',
+  }
+}
+
+// ============================================
+// SMS / LMS / MMS 발송
+// ============================================
+
+export interface SendMessageParams {
+  to: string
+  from: string
+  text: string
+  type?: 'SMS' | 'LMS' | 'MMS'
+  subject?: string       // LMS/MMS용
+  imageId?: string       // MMS용
+  kakaoOptions?: {
+    pfId: string
+    templateId: string
+    variables?: Record<string, string>
+  }
+}
+
+export interface SendMessageResponse {
+  groupId: string
+  messageId: string
+  statusCode: string
+  statusMessage: string
+  to: string
+  type: string
+  from: string
+}
+
+// 단건 발송
+export async function sendMessage(params: SendMessageParams): Promise<SendMessageResponse> {
+  const response = await fetch(`${SOLAPI_BASE_URL}/messages/v4/send`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ message: params }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI Send Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}
+
+// 대량 발송
+export async function sendManyMessages(
+  messages: SendMessageParams[]
+): Promise<{ groupId: string; messageIds: string[] }> {
+  const response = await fetch(`${SOLAPI_BASE_URL}/messages/v4/send-many`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify({ messages }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI Send Many Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}
+
+// ============================================
+// 카카오 알림톡 발송
+// ============================================
+
+export interface SendKakaoParams {
+  to: string
+  from: string
+  text?: string
+  kakaoOptions: {
+    pfId: string
+    templateId: string
+    variables?: Record<string, string>
+    disableSms?: boolean
+  }
+}
+
+export async function sendKakaoAlimtalk(params: SendKakaoParams) {
+  return sendMessage(params as SendMessageParams)
+}
+
+// ============================================
+// 잔액 조회
+// ============================================
+
+export interface BalanceResponse {
+  balance: number
+  point: number
+}
+
+export async function getBalance(): Promise<BalanceResponse> {
+  const response = await fetch(`${SOLAPI_BASE_URL}/cash/v1/balance`, {
+    headers: getHeaders(),
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI Balance Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}
+
+// ============================================
+// 메시지 조회
+// ============================================
+
+export async function getMessageList(params?: {
+  startDate?: string
+  endDate?: string
+  limit?: number
+  startKey?: string
+}) {
+  const searchParams = new URLSearchParams()
+  if (params?.startDate) searchParams.set('startDate', params.startDate)
+  if (params?.endDate) searchParams.set('endDate', params.endDate)
+  if (params?.limit) searchParams.set('limit', params.limit.toString())
+  if (params?.startKey) searchParams.set('startKey', params.startKey)
+
+  const response = await fetch(
+    `${SOLAPI_BASE_URL}/messages/v4/list?${searchParams}`,
+    { headers: getHeaders(), cache: 'no-store' }
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI List Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}
+
+// ============================================
+// 발신번호 목록 조회
+// ============================================
+
+export async function getSenderNumbers() {
+  const response = await fetch(
+    `${SOLAPI_BASE_URL}/senderid/v1/numbers`,
+    { headers: getHeaders(), cache: 'no-store' }
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI SenderID Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}

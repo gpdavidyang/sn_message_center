@@ -1,0 +1,33 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
+import { Bell } from 'lucide-react'
+
+const pageTitles: Record<string, string> = {
+  '/': '대시보드',
+  '/contacts/hubspot': 'HubSpot 연락처',
+  '/contacts/groups': '연락처 그룹',
+  '/messages/compose': '메시지 작성',
+  '/messages/campaigns': '캠페인 목록',
+  '/kakao/templates': '카카오 알림톡 템플릿',
+  '/kakao/send': '알림톡 발송',
+  '/settings/api': 'API 키 관리',
+  '/settings/sender': '발신번호 관리',
+  '/settings/users': '사용자 관리',
+}
+
+export default function Header() {
+  const pathname = usePathname()
+  const title = pageTitles[pathname] || 'SparkNova Message Center'
+
+  return (
+    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+      <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
+      <div className="flex items-center gap-4">
+        <button className="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100">
+          <Bell className="h-5 w-5" />
+        </button>
+      </div>
+    </header>
+  )
+}
