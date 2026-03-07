@@ -213,6 +213,7 @@ export default function CampaignsPage() {
           <p className="mt-2 text-gray-500">검색 결과가 없습니다.</p>
         </div>
       ) : (
+        <>
         {/* Mobile: Card layout */}
         <div className="space-y-3 sm:hidden">
           {filtered.map((c) => (
@@ -291,6 +292,7 @@ export default function CampaignsPage() {
             </table>
           </div>
         </div>
+        </>
       )}
     </div>
   )
