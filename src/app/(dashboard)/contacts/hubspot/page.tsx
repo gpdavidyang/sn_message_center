@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   Search, Download, Users, Loader2, ChevronLeft, ChevronRight,
   MessageSquare, MessageCircle, X, RefreshCw, Filter,
-  Phone as PhoneIcon, ArrowUpDown, ArrowUp, ArrowDown
+  Phone as PhoneIcon, ArrowUpDown, ArrowUp, ArrowDown, Calendar
 } from 'lucide-react'
 import { LIFECYCLE_STAGES, buildHubSpotFilters, type AdvancedFilterOptions } from '@/lib/hubspot/filter-builder'
 
@@ -18,6 +18,7 @@ interface HubSpotContact {
     phone?: string
     company?: string
     lifecyclestage?: string
+    createdate?: string
   }
 }
 
@@ -49,7 +50,7 @@ export default function HubSpotContactsPage() {
   const activeFilterCount = [company, lifecyclestage, phoneExists !== undefined ? 'x' : '', createdAfter, createdBefore].filter(Boolean).length
 
   // 정렬 상태
-  type SortKey = 'name' | 'email' | 'phone' | 'company' | 'lifecyclestage'
+  type SortKey = 'name' | 'email' | 'phone' | 'company' | 'lifecyclestage' | 'createdate'
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
 
@@ -70,6 +71,7 @@ export default function HubSpotContactsPage() {
       case 'phone': return p.phone || ''
       case 'company': return (p.company || '').toLowerCase()
       case 'lifecyclestage': return (p.lifecyclestage || '').toLowerCase()
+      case 'createdate': return p.createdate || ''
     }
   }
 
@@ -286,6 +288,17 @@ export default function HubSpotContactsPage() {
   const handleGoToKakao = () => {
     const phones = importedContacts.map((c) => c.properties.phone).filter(Boolean).join(',')
     router.push(`/kakao/send?phones=${encodeURIComponent(phones)}`)
+  }
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    const yyyy = d.getFullYear()
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    const dd = String(d.getDate()).padStart(2, '0')
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mi = String(d.getMinutes()).padStart(2, '0')
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
   }
 
   return (
@@ -549,12 +562,18 @@ export default function HubSpotContactsPage() {
                     단계 <SortIcon column="lifecyclestage" />
                   </button>
                 </th>
+                <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">
+                  <button onClick={() => handleSort('createdate')} className="inline-flex items-center hover:text-gray-900">
+                    <Calendar className="mr-1 h-3.5 w-3.5" />
+                    등록일 <SortIcon column="createdate" />
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={7} className="px-4 py-12 text-center">
                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400" />
                     <p className="mt-2 text-gray-500">
                       {syncing ? 'HubSpot 전체 동기화 중...' : formMode ? '양식 제출 데이터 불러오는 중...' : 'HubSpot 연락처를 불러오는 중...'}
@@ -563,7 +582,7 @@ export default function HubSpotContactsPage() {
                 </tr>
               ) : contacts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={7} className="px-4 py-12 text-center">
                     <Users className="mx-auto h-8 w-8 text-gray-400" />
                     <p className="mt-2 text-gray-500">{formMode ? '이 양식에 제출된 연락처가 없습니다.' : '조건에 맞는 연락처가 없습니다.'}</p>
                   </td>
@@ -582,6 +601,9 @@ export default function HubSpotContactsPage() {
                       {contact.properties.lifecyclestage && (
                         <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{contact.properties.lifecyclestage}</span>
                       )}
+                    </td>
+                    <td className="hidden px-4 py-3 text-xs text-gray-500 md:table-cell">
+                      {formatDate(contact.properties.createdate)}
                     </td>
                   </tr>
                 ))

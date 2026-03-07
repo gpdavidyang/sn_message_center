@@ -92,6 +92,41 @@ export async function sendKakaoAlimtalk(params: SendKakaoParams) {
 }
 
 // ============================================
+// 카카오 알림톡 템플릿 목록 조회
+// ============================================
+
+export interface KakaoTemplate {
+  templateId: string
+  name: string
+  content: string
+  buttons?: Array<{
+    type: string
+    name: string
+    linkMo?: string
+    linkPc?: string
+  }>
+  status: string
+  inspectionStatus?: string
+  comments?: string[]
+  dateCreated?: string
+  dateUpdated?: string
+}
+
+export async function getKakaoTemplates(pfId: string) {
+  const response = await fetch(
+    `${SOLAPI_BASE_URL}/kakao/v2/templates?pfId=${pfId}`,
+    { headers: getHeaders(), cache: 'no-store' }
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`SOLAPI Kakao Templates Error: ${JSON.stringify(error)}`)
+  }
+
+  return response.json()
+}
+
+// ============================================
 // 잔액 조회
 // ============================================
 

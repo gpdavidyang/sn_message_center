@@ -41,7 +41,7 @@ export interface HubSpotFilter {
 
 // List contacts with optional properties
 export async function listContacts(
-  properties: string[] = ['firstname', 'lastname', 'email', 'phone', 'company', 'lifecyclestage'],
+  properties: string[] = ['firstname', 'lastname', 'email', 'phone', 'company', 'lifecyclestage', 'createdate'],
   limit: number = 100,
   after?: string
 ): Promise<HubSpotContactsResponse> {
@@ -67,7 +67,7 @@ export async function listContacts(
 // Search contacts with filters
 export async function searchContacts(
   filters: HubSpotFilter[],
-  properties: string[] = ['firstname', 'lastname', 'email', 'phone', 'company', 'lifecyclestage'],
+  properties: string[] = ['firstname', 'lastname', 'email', 'phone', 'company', 'lifecyclestage', 'createdate'],
   limit: number = 100,
   after?: string
 ): Promise<HubSpotContactsResponse> {
