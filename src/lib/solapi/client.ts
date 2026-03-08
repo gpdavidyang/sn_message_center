@@ -17,7 +17,7 @@ export interface SendMessageParams {
   to: string
   from: string
   text: string
-  type?: 'SMS' | 'LMS' | 'MMS' | 'FRT'
+  type?: 'SMS' | 'LMS' | 'MMS' | 'ATA' | 'CTA' | 'CTI'
   subject?: string       // LMS/MMS용
   imageId?: string       // MMS용
   kakaoOptions?: {

@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       const logs = recipients.map((r: { phone: string }) => ({
         campaign_id: campaign.id,
         recipient_phone: normalizePhoneNumber(r.phone),
-        type: 'FRT',
+        type: 'CTA',
         content: content.trim(),
         status: 'pending',
       }))
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       to: normalizePhoneNumber(r.phone),
       from: normalizePhoneNumber(senderNumber),
       text: content.trim(),
-      type: 'FRT' as const,
+      type: 'CTA' as const,
       kakaoOptions: {
         pfId,
         ...(kakaoButtons.length > 0 ? { buttons: kakaoButtons } : {}),
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const logs = recipients.map((r: { phone: string }) => ({
       campaign_id: campaign.id,
       recipient_phone: normalizePhoneNumber(r.phone),
-      type: 'FRT',
+      type: 'CTA',
       content: content.trim(),
       status: 'sent',
       sent_at: new Date().toISOString(),
