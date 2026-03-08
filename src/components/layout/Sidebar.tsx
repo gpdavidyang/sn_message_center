@@ -7,12 +7,12 @@ import {
   LayoutDashboard,
   Users,
   MessageSquare,
-  Send,
   Settings,
   LogOut,
   MessageCircle,
   Menu,
   X,
+  ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { createClient } from '@/lib/supabase/client'
@@ -39,7 +39,6 @@ const navigation = [
     icon: MessageSquare,
     children: [
       { name: '메시지 작성', href: '/messages/compose' },
-      { name: '캠페인 목록', href: '/messages/campaigns' },
     ],
   },
   {
@@ -50,6 +49,12 @@ const navigation = [
       { name: '템플릿 관리', href: '/kakao/templates' },
       { name: '알림톡 발송', href: '/kakao/send' },
     ],
+  },
+  {
+    name: '발송 내역',
+    href: '/messages/campaigns',
+    icon: ClipboardList,
+    matchPrefix: true,
   },
   {
     name: '설정',
@@ -113,9 +118,10 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         {navigation.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            item.children?.some((child) => pathname === child.href)
+          const isActive = (item as { matchPrefix?: boolean }).matchPrefix
+            ? pathname.startsWith(item.href)
+            : pathname === item.href ||
+              item.children?.some((child) => pathname === child.href)
 
           return (
             <div key={item.name} className="mb-1">

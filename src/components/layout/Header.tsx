@@ -8,7 +8,7 @@ const pageTitles: Record<string, string> = {
   '/contacts/hubspot': 'HubSpot 연락처',
   '/contacts/groups': '연락처 그룹',
   '/messages/compose': '메시지 작성',
-  '/messages/campaigns': '캠페인 목록',
+  '/messages/campaigns': '발송 내역',
   '/kakao/templates': '카카오 알림톡 템플릿',
   '/kakao/send': '알림톡 발송',
   '/settings/api': 'API 키 관리',

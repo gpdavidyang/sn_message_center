@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { MessageSquare, Loader2, Search, Filter, X } from 'lucide-react'
+import {
+  MessageSquare, MessageCircle, Loader2, Search, Filter, X,
+  PenLine, Send,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface Campaign {
@@ -34,6 +37,31 @@ const statusLabels: Record<string, string> = {
   scheduled: '예약됨',
 }
 
+function TypeBadge({ type }: { type: string }) {
+  switch (type) {
+    case 'SMS':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+          <MessageSquare className="h-3 w-3" /> SMS
+        </span>
+      )
+    case 'LMS':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+          <MessageSquare className="h-3 w-3" /> LMS
+        </span>
+      )
+    case 'KAKAO':
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
+          <MessageCircle className="h-3 w-3" /> 알림톡
+        </span>
+      )
+    default:
+      return <span className="text-xs text-gray-500">{type}</span>
+  }
+}
+
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [filtered, setFiltered] = useState<Campaign[]>([])
@@ -57,34 +85,18 @@ export default function CampaignsPage() {
       setLoading(false)
     }
     fetchCampaigns()
-  }, [])
+  }, [supabase])
 
-  // Apply filters
   useEffect(() => {
     let result = [...campaigns]
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       result = result.filter(c => c.name.toLowerCase().includes(q))
     }
-    if (statusFilter !== 'all') {
-      result = result.filter(c => c.status === statusFilter)
-    }
-    if (typeFilter !== 'all') {
-      result = result.filter(c => c.type === typeFilter)
-    }
-    if (dateFrom) {
-      result = result.filter(c => {
-        const d = c.sent_at || c.created_at
-        return d >= dateFrom
-      })
-    }
-    if (dateTo) {
-      result = result.filter(c => {
-        const d = c.sent_at || c.created_at
-        return d <= dateTo + 'T23:59:59'
-      })
-    }
+    if (statusFilter !== 'all') result = result.filter(c => c.status === statusFilter)
+    if (typeFilter !== 'all') result = result.filter(c => c.type === typeFilter)
+    if (dateFrom) result = result.filter(c => (c.sent_at || c.created_at) >= dateFrom)
+    if (dateTo) result = result.filter(c => (c.sent_at || c.created_at) <= dateTo + 'T23:59:59')
     setFiltered(result)
   }, [campaigns, searchQuery, statusFilter, typeFilter, dateFrom, dateTo])
 
@@ -99,6 +111,14 @@ export default function CampaignsPage() {
     setSearchQuery(''); setStatusFilter('all'); setTypeFilter('all'); setDateFrom(''); setDateTo('')
   }
 
+  const formatDate = (c: Campaign) => {
+    if (c.status === 'scheduled' && c.scheduled_at) {
+      return `📅 ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
+    }
+    if (c.sent_at) return new Date(c.sent_at).toLocaleDateString('ko-KR')
+    return new Date(c.created_at).toLocaleDateString('ko-KR')
+  }
+
   if (loading) {
     return (
       <div className="py-12 text-center">
@@ -109,6 +129,22 @@ export default function CampaignsPage() {
 
   return (
     <div>
+      {/* Quick action buttons */}
+      <div className="mb-5 flex flex-wrap items-center gap-2">
+        <Link
+          href="/messages/compose"
+          className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+        >
+          <PenLine className="h-4 w-4" /> 문자(SMS/LMS) 작성
+        </Link>
+        <Link
+          href="/kakao/send"
+          className="flex items-center gap-1.5 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100"
+        >
+          <Send className="h-4 w-4" /> 알림톡 발송
+        </Link>
+      </div>
+
       {/* Search & Filter bar */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
@@ -170,6 +206,7 @@ export default function CampaignsPage() {
               <option value="all">전체</option>
               <option value="SMS">SMS</option>
               <option value="LMS">LMS</option>
+              <option value="KAKAO">카카오 알림톡</option>
             </select>
           </div>
           <div>
@@ -193,19 +230,32 @@ export default function CampaignsPage() {
         </div>
       )}
 
-      {/* Results count */}
-      <div className="mb-3 text-sm text-gray-500">
-        총 {filtered.length}개 캠페인
-        {filtered.length !== campaigns.length && ` (전체 ${campaigns.length}개 중)`}
-      </div>
+      {/* Stats row */}
+      {campaigns.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-gray-500">
+          <span>총 {filtered.length}건{filtered.length !== campaigns.length && ` (전체 ${campaigns.length}건 중)`}</span>
+          <span className="text-gray-300">|</span>
+          <span className="text-blue-600">SMS {campaigns.filter(c => c.type === 'SMS').length}</span>
+          <span className="text-indigo-600">LMS {campaigns.filter(c => c.type === 'LMS').length}</span>
+          <span className="text-yellow-600">알림톡 {campaigns.filter(c => c.type === 'KAKAO').length}</span>
+        </div>
+      )}
 
       {campaigns.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-12 text-center shadow-sm">
-          <MessageSquare className="mx-auto h-10 w-10 text-gray-400" />
-          <p className="mt-2 text-gray-500">아직 캠페인이 없습니다.</p>
-          <Link href="/messages/compose" className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-            메시지 작성하기
-          </Link>
+          <div className="flex items-center justify-center gap-3">
+            <MessageSquare className="h-8 w-8 text-gray-300" />
+            <MessageCircle className="h-8 w-8 text-gray-300" />
+          </div>
+          <p className="mt-3 text-gray-500">아직 발송 내역이 없습니다.</p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Link href="/messages/compose" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+              문자 작성하기
+            </Link>
+            <Link href="/kakao/send" className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600">
+              알림톡 발송하기
+            </Link>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white py-12 text-center shadow-sm">
@@ -214,84 +264,76 @@ export default function CampaignsPage() {
         </div>
       ) : (
         <>
-        {/* Mobile: Card layout */}
-        <div className="space-y-3 sm:hidden">
-          {filtered.map((c) => (
-            <Link
-              key={c.id}
-              href={`/messages/campaigns/${c.id}`}
-              className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-900 truncate">{c.name}</p>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
-                  {statusLabels[c.status] || c.status}
-                </span>
-              </div>
-              <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                <span>{c.type}</span>
-                <span>{c.total_count}건</span>
-                <span className="text-green-600">{c.success_count}성공</span>
-                <span className="text-red-600">{c.fail_count}실패</span>
-              </div>
-              <p className="mt-1 text-xs text-gray-400">
-                {c.status === 'scheduled' && c.scheduled_at
-                  ? `예약: ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
-                  : c.sent_at
-                    ? new Date(c.sent_at).toLocaleDateString('ko-KR')
-                    : '-'}
-              </p>
-            </Link>
-          ))}
-        </div>
-
-        {/* Desktop: Table layout */}
-        <div className="hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:block">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-gray-600">캠페인명</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">유형</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">상태</th>
-                  <th className="px-4 py-3 font-medium text-gray-600">발송</th>
-                  <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">성공/실패</th>
-                  <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">발송일</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c) => (
-                  <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <Link href={`/messages/campaigns/${c.id}`} className="font-medium text-blue-600 hover:underline">
-                        {c.name}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{c.type}</td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
-                        {statusLabels[c.status] || c.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{c.total_count}건</td>
-                    <td className="hidden px-4 py-3 text-gray-600 md:table-cell">
-                      <span className="text-green-600">{c.success_count}</span>
-                      {' / '}
-                      <span className="text-red-600">{c.fail_count}</span>
-                    </td>
-                    <td className="hidden px-4 py-3 text-gray-500 lg:table-cell">
-                      {c.status === 'scheduled' && c.scheduled_at
-                        ? `📅 ${new Date(c.scheduled_at).toLocaleString('ko-KR')}`
-                        : c.sent_at
-                          ? new Date(c.sent_at).toLocaleDateString('ko-KR')
-                          : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Mobile: Card layout */}
+          <div className="space-y-3 sm:hidden">
+            {filtered.map((c) => (
+              <Link
+                key={c.id}
+                href={`/messages/campaigns/${c.id}`}
+                className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:bg-gray-50"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="truncate font-medium text-gray-900">{c.name}</p>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
+                    {statusLabels[c.status] || c.status}
+                  </span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <TypeBadge type={c.type} />
+                  <span className="text-xs text-gray-500">{c.total_count}건</span>
+                  <span className="text-xs text-green-600">✓ {c.success_count}</span>
+                  <span className="text-xs text-red-500">✗ {c.fail_count}</span>
+                </div>
+                <p className="mt-1 text-xs text-gray-400">{formatDate(c)}</p>
+              </Link>
+            ))}
           </div>
-        </div>
+
+          {/* Desktop: Table layout */}
+          <div className="hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-gray-200 bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 font-medium text-gray-600">캠페인명</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">유형</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">상태</th>
+                    <th className="px-4 py-3 font-medium text-gray-600">발송</th>
+                    <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">성공 / 실패</th>
+                    <th className="hidden px-4 py-3 font-medium text-gray-600 lg:table-cell">발송일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((c) => (
+                    <tr key={c.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <Link href={`/messages/campaigns/${c.id}`} className="font-medium text-blue-600 hover:underline">
+                          {c.name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <TypeBadge type={c.type} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusColors[c.status] || ''}`}>
+                          {statusLabels[c.status] || c.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{c.total_count}건</td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <span className="text-green-600">{c.success_count}</span>
+                        <span className="mx-1 text-gray-300">/</span>
+                        <span className="text-red-500">{c.fail_count}</span>
+                      </td>
+                      <td className="hidden px-4 py-3 text-sm text-gray-500 lg:table-cell">
+                        {formatDate(c)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </>
       )}
     </div>
