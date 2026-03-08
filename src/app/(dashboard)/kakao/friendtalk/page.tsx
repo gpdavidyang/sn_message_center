@@ -47,6 +47,9 @@ function FriendtalkContent() {
   const [scheduledDate, setScheduledDate] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
 
+  // disableSms
+  const [disableSms, setDisableSms] = useState(false)
+
   // HubSpot picker
   const [showHubSpotPicker, setShowHubSpotPicker] = useState(false)
   const [hubSpotForms, setHubSpotForms] = useState<{ id: string; name: string }[]>([])
@@ -279,6 +282,7 @@ function FriendtalkContent() {
         senderNumber,
         recipients: recipients.map((r) => ({ phone: r.phone })),
         buttons: validButtons.length > 0 ? validButtons : undefined,
+        disableSms,
       }
       if (isScheduled) {
         body.scheduledAt = new Date(`${scheduledDate}T${scheduledTime}:00`).toISOString()
@@ -444,7 +448,7 @@ function FriendtalkContent() {
           </div>
 
           {/* Schedule toggle */}
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
             <label className="flex cursor-pointer items-center gap-3">
               <input
                 type="checkbox"
@@ -471,6 +475,28 @@ function FriendtalkContent() {
                   className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-green-500 focus:outline-none"
                 />
               </div>
+            )}
+          </div>
+
+          {/* disableSms toggle */}
+          <div className={`rounded-lg border p-3 ${disableSms ? 'border-orange-200 bg-orange-50' : 'border-gray-200 bg-gray-50'}`}>
+            <label className="flex cursor-pointer items-center gap-3">
+              <input
+                type="checkbox"
+                checked={disableSms}
+                onChange={(e) => setDisableSms(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+              />
+              <span className="text-sm font-medium text-gray-700">SMS 대체 발송 비활성화</span>
+            </label>
+            {disableSms && (
+              <p className="mt-1.5 text-xs text-orange-700">
+                친구톡 전용 발송 — 카카오 채널 친구가 아닌 수신자에게는 발송 실패로 처리됩니다.
+                실패한 수신자는 자동으로 <strong>비친구</strong>로 기록되어 연락처에서 확인할 수 있습니다.
+              </p>
+            )}
+            {!disableSms && (
+              <p className="mt-1 text-xs text-gray-400">비활성화 시 친구 여부를 확인할 수 있습니다.</p>
             )}
           </div>
         </div>

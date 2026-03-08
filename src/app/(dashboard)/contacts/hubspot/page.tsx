@@ -10,7 +10,7 @@ import {
   Mail, Building2, Tag, CheckCircle, Clock, XCircle, AlertCircle,
 } from 'lucide-react'
 import { LIFECYCLE_STAGES, buildHubSpotFilters, type AdvancedFilterOptions } from '@/lib/hubspot/filter-builder'
-import { formatPhoneDisplay } from '@/lib/utils/phone'
+import { formatPhoneDisplay, normalizePhoneNumber } from '@/lib/utils/phone'
 
 interface MessageLog {
   id: string
@@ -88,6 +88,10 @@ export default function HubSpotContactsPage() {
   const [showSendModal, setShowSendModal] = useState(false)
   const [importedContacts, setImportedContacts] = useState<HubSpotContact[]>([])
 
+  // 카카오 친구 상태
+  const [kakaoFriendStatuses, setKakaoFriendStatuses] = useState<Record<string, boolean | null>>({})
+  const [kakaoFriendFilter, setKakaoFriendFilter] = useState<'all' | 'friend' | 'non_friend'>('all')
+
   // 필터 상태
   const [showFilters, setShowFilters] = useState(true)
   const [query, setQuery] = useState('')
@@ -96,7 +100,7 @@ export default function HubSpotContactsPage() {
   const [phoneExists, setPhoneExists] = useState<boolean | undefined>(undefined)
   const [createdAfter, setCreatedAfter] = useState('')
   const [createdBefore, setCreatedBefore] = useState('')
-  const activeFilterCount = [company, lifecyclestage, phoneExists !== undefined ? 'x' : '', createdAfter, createdBefore].filter(Boolean).length
+  const activeFilterCount = [company, lifecyclestage, phoneExists !== undefined ? 'x' : '', createdAfter, createdBefore, kakaoFriendFilter !== 'all' ? 'x' : ''].filter(Boolean).length
 
   // 정렬 상태
   type SortKey = 'name' | 'email' | 'phone' | 'company' | 'lifecyclestage' | 'createdate'
@@ -124,14 +128,27 @@ export default function HubSpotContactsPage() {
     }
   }
 
-  const sortedContacts = sortKey
-    ? [...contacts].sort((a, b) => {
-        const aVal = getSortValue(a, sortKey)
-        const bVal = getSortValue(b, sortKey)
-        const cmp = aVal.localeCompare(bVal, 'ko')
-        return sortDir === 'asc' ? cmp : -cmp
+  const sortedContacts = (() => {
+    let result = sortKey
+      ? [...contacts].sort((a, b) => {
+          const aVal = getSortValue(a, sortKey)
+          const bVal = getSortValue(b, sortKey)
+          const cmp = aVal.localeCompare(bVal, 'ko')
+          return sortDir === 'asc' ? cmp : -cmp
+        })
+      : contacts
+
+    if (kakaoFriendFilter !== 'all') {
+      result = result.filter(c => {
+        const phone = c.properties.phone ? normalizePhoneNumber(c.properties.phone) : ''
+        const status = kakaoFriendStatuses[phone]
+        if (kakaoFriendFilter === 'friend') return status === true
+        if (kakaoFriendFilter === 'non_friend') return status === false
+        return true
       })
-    : contacts
+    }
+    return result
+  })()
 
   const SortIcon = ({ column }: { column: SortKey }) => {
     if (sortKey !== column) return <ArrowUpDown className="ml-1 inline h-3 w-3 text-gray-400" />
@@ -251,14 +268,30 @@ export default function HubSpotContactsPage() {
 
       if (result.error) throw new Error(result.error)
 
-      setContacts(result.results || [])
+      const loadedContacts = result.results || []
+      setContacts(loadedContacts)
       setAfter(result.paging?.next?.after)
       setHasNext(!!result.paging?.next)
+
+      // 친구 상태 조회
+      fetchKakaoFriendStatuses(loadedContacts)
     } catch (err: unknown) {
       setMessage(`❌ ${err instanceof Error ? err.message : '연락처를 불러오지 못했습니다.'}`)
     } finally {
       setLoading(false)
     }
+  }
+
+  const fetchKakaoFriendStatuses = async (contactList: HubSpotContact[]) => {
+    const phones = contactList
+      .map(c => c.properties.phone ? normalizePhoneNumber(c.properties.phone) : '')
+      .filter(p => p.length >= 10)
+    if (phones.length === 0) return
+    try {
+      const res = await fetch(`/api/kakao/channel-friends?phones=${encodeURIComponent(phones.join(','))}`)
+      const data = await res.json()
+      setKakaoFriendStatuses(prev => ({ ...prev, ...(data.statuses || {}) }))
+    } catch { /* silent */ }
   }
 
   // 폼 제출자 조회
@@ -272,9 +305,11 @@ export default function HubSpotContactsPage() {
       const res = await fetch(`/api/contacts/hubspot-forms?action=submissions&formId=${formId}`)
       const data = await res.json()
       if (data.error) throw new Error(data.error)
-      setContacts(data.contacts || [])
+      const loadedContacts = data.contacts || []
+      setContacts(loadedContacts)
       setAfter(undefined)
       setHasNext(false)
+      fetchKakaoFriendStatuses(loadedContacts)
     } catch (err: unknown) {
       setMessage(`❌ ${err instanceof Error ? err.message : '폼 데이터를 불러오지 못했습니다.'}`)
     } finally {
@@ -307,6 +342,7 @@ export default function HubSpotContactsPage() {
     setSelectedForm('')
     setSelectedFormName('')
     setFormMode(false)
+    setKakaoFriendFilter('all')
     setSelected(new Set())
     setTimeout(() => fetchContacts(), 0)
   }
@@ -391,6 +427,15 @@ export default function HubSpotContactsPage() {
   const handleGoToKakao = () => {
     const phones = importedContacts.map((c) => c.properties.phone).filter(Boolean).join(',')
     router.push(`/kakao/send?phones=${encodeURIComponent(phones)}`)
+  }
+
+  const handleGoToFriendtalk = () => {
+    const phones = importedContacts.map((c) => c.properties.phone).filter(Boolean).join(',')
+    const names = importedContacts
+      .map((c) => `${c.properties.firstname || ''} ${c.properties.lastname || ''}`.trim())
+      .filter(Boolean)
+      .join(',')
+    router.push(`/kakao/friendtalk?phones=${encodeURIComponent(phones)}&names=${encodeURIComponent(names)}`)
   }
 
   const formatDate = (dateStr?: string) => {
@@ -770,6 +815,23 @@ export default function HubSpotContactsPage() {
                   <span className="text-sm text-gray-700">전화번호 있는 연락처만</span>
                 </label>
 
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-medium text-gray-600">카카오 친구:</span>
+                  <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs">
+                    {(['all', 'friend', 'non_friend'] as const).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => setKakaoFriendFilter(v)}
+                        className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+                          kakaoFriendFilter === v ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        {v === 'all' ? '전체' : v === 'friend' ? '🟢 친구' : '🔴 비친구'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <label className="text-xs font-medium text-gray-600">HubSpot 양식:</label>
                   {loadingForms ? (
@@ -882,7 +944,14 @@ export default function HubSpotContactsPage() {
                     <div className="rounded-lg bg-yellow-500 p-2"><MessageCircle className="h-5 w-5 text-white" /></div>
                     <div>
                       <p className="font-semibold text-gray-900">카카오 알림톡</p>
-                      <p className="text-xs text-gray-500">카카오톡 알림톡 템플릿으로 발송합니다</p>
+                      <p className="text-xs text-gray-500">승인된 템플릿으로 발송합니다</p>
+                    </div>
+                  </button>
+                  <button onClick={handleGoToFriendtalk} className="flex w-full items-center gap-3 rounded-xl border-2 border-green-100 bg-green-50 px-4 py-3 text-left transition-colors hover:border-green-300 hover:bg-green-100">
+                    <div className="rounded-lg bg-green-600 p-2"><MessageCircle className="h-5 w-5 text-white" /></div>
+                    <div>
+                      <p className="font-semibold text-gray-900">카카오 친구톡</p>
+                      <p className="text-xs text-gray-500">채널 친구에게 자유 텍스트로 발송합니다</p>
                     </div>
                   </button>
                   <button onClick={() => setShowSendModal(false)} className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50">
@@ -927,6 +996,9 @@ export default function HubSpotContactsPage() {
                         단계 <SortIcon column="lifecyclestage" />
                       </button>
                     </th>
+                    <th className="hidden px-4 py-3 font-medium text-gray-600 sm:table-cell">
+                      카카오
+                    </th>
                     <th className="hidden px-4 py-3 font-medium text-gray-600 md:table-cell">
                       <button onClick={() => handleSort('createdate')} className="inline-flex items-center hover:text-gray-900">
                         <Calendar className="mr-1 h-3.5 w-3.5" />
@@ -938,7 +1010,7 @@ export default function HubSpotContactsPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center">
+                      <td colSpan={8} className="px-4 py-12 text-center">
                         <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400" />
                         <p className="mt-2 text-gray-500">
                           {syncing ? 'HubSpot 전체 동기화 중...' : formMode ? '양식 제출 데이터 불러오는 중...' : 'HubSpot 연락처를 불러오는 중...'}
@@ -947,7 +1019,7 @@ export default function HubSpotContactsPage() {
                     </tr>
                   ) : contacts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center">
+                      <td colSpan={8} className="px-4 py-12 text-center">
                         <Users className="mx-auto h-8 w-8 text-gray-400" />
                         <p className="mt-2 text-gray-500">{formMode ? '이 양식에 제출된 연락처가 없습니다.' : '조건에 맞는 연락처가 없습니다.'}</p>
                       </td>
@@ -973,6 +1045,15 @@ export default function HubSpotContactsPage() {
                           {contact.properties.lifecyclestage && (
                             <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">{contact.properties.lifecyclestage}</span>
                           )}
+                        </td>
+                        <td className="hidden px-4 py-3 sm:table-cell">
+                          {(() => {
+                            const phone = contact.properties.phone ? normalizePhoneNumber(contact.properties.phone) : ''
+                            const status = phone ? kakaoFriendStatuses[phone] : undefined
+                            if (status === true) return <span className="text-sm" title="카카오 채널 친구">🟢</span>
+                            if (status === false) return <span className="text-sm" title="카카오 채널 비친구">🔴</span>
+                            return <span className="text-xs text-gray-300">-</span>
+                          })()}
                         </td>
                         <td className="hidden px-4 py-3 text-xs text-gray-500 md:table-cell">
                           {formatDate(contact.properties.createdate)}
@@ -1072,6 +1153,25 @@ export default function HubSpotContactsPage() {
                 </dl>
               </div>
 
+              {/* Kakao friend status */}
+              {drawerContact.properties.phone && (() => {
+                const phone = normalizePhoneNumber(drawerContact.properties.phone)
+                const status = kakaoFriendStatuses[phone]
+                if (status === undefined) return null
+                return (
+                  <div className="border-b border-gray-100 px-5 py-3">
+                    <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                      status === true ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                    }`}>
+                      <span>{status === true ? '🟢' : '🔴'}</span>
+                      <span className="font-medium">
+                        {status === true ? '카카오 채널 친구' : '카카오 채널 비친구'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })()}
+
               {/* Action Buttons */}
               <div className="border-b border-gray-100 px-5 py-4">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-400">메시지 발송</h3>
@@ -1097,7 +1197,19 @@ export default function HubSpotContactsPage() {
                     className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-yellow-500 px-3 py-2.5 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-40"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    알림톡 발송
+                    알림톡
+                  </button>
+                  <button
+                    onClick={() => {
+                      const phone = drawerContact.properties.phone || ''
+                      const name = `${drawerContact.properties.firstname || ''} ${drawerContact.properties.lastname || ''}`.trim()
+                      router.push(`/kakao/friendtalk?phones=${encodeURIComponent(phone)}&names=${encodeURIComponent(name)}`)
+                    }}
+                    disabled={!drawerContact.properties.phone}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-40"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    친구톡
                   </button>
                 </div>
               </div>
