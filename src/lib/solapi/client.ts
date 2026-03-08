@@ -127,6 +127,73 @@ export async function getKakaoTemplates(_pfId?: string) {
 }
 
 // ============================================
+// 카카오 알림톡 템플릿 CRUD
+// ============================================
+
+export interface KakaoTemplateParams {
+  pfId: string
+  name: string
+  content: string
+  categoryCode: string
+  buttons?: Array<{
+    type: string
+    name: string
+    linkMo?: string
+    linkPc?: string
+  }>
+}
+
+export async function createKakaoTemplate(params: KakaoTemplateParams) {
+  const response = await fetch(`${SOLAPI_BASE_URL}/kakao/v2/templates`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(params),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error?.errorMessage || error?.message || JSON.stringify(error))
+  }
+  return response.json()
+}
+
+export async function updateKakaoTemplate(templateId: string, params: Partial<KakaoTemplateParams>) {
+  const response = await fetch(`${SOLAPI_BASE_URL}/kakao/v2/templates/${templateId}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(params),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error?.errorMessage || error?.message || JSON.stringify(error))
+  }
+  return response.json()
+}
+
+export async function deleteKakaoTemplate(templateId: string) {
+  const response = await fetch(`${SOLAPI_BASE_URL}/kakao/v2/templates/${templateId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error?.errorMessage || error?.message || JSON.stringify(error))
+  }
+  return true
+}
+
+export async function requestKakaoTemplateApproval(templateId: string) {
+  const response = await fetch(`${SOLAPI_BASE_URL}/kakao/v2/templates/${templateId}/request`, {
+    method: 'POST',
+    headers: getHeaders(),
+  })
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error?.errorMessage || error?.message || JSON.stringify(error))
+  }
+  return response.json()
+}
+
+// ============================================
 // 잔액 조회
 // ============================================
 
