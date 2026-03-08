@@ -11,6 +11,7 @@ const pageTitles: Record<string, string> = {
   '/messages/campaigns': '발송 내역',
   '/kakao/templates': '카카오 알림톡 템플릿',
   '/kakao/send': '알림톡 작성',
+  '/kakao/friendtalk': '친구톡 작성',
   '/settings/api': 'API 키 관리',
   '/settings/sender': '발신번호 관리',
   '/settings/users': '사용자 관리',

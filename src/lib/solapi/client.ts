@@ -17,13 +17,15 @@ export interface SendMessageParams {
   to: string
   from: string
   text: string
-  type?: 'SMS' | 'LMS' | 'MMS'
+  type?: 'SMS' | 'LMS' | 'MMS' | 'FRT'
   subject?: string       // LMS/MMS용
   imageId?: string       // MMS용
   kakaoOptions?: {
     pfId: string
-    templateId: string
+    templateId?: string   // 알림톡 필수, 친구톡 불필요
     variables?: Record<string, string>
+    buttons?: Array<{ type: string; name: string; linkMo?: string; linkPc?: string }>
+    disableSms?: boolean
   }
 }
 

@@ -48,6 +48,7 @@ const navigation = [
     children: [
       { name: '템플릿 관리', href: '/kakao/templates' },
       { name: '알림톡 작성', href: '/kakao/send' },
+      { name: '친구톡 작성', href: '/kakao/friendtalk' },
     ],
   },
   {
