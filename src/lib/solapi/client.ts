@@ -112,9 +112,9 @@ export interface KakaoTemplate {
   dateUpdated?: string
 }
 
-export async function getKakaoTemplates(pfId: string) {
+export async function getKakaoTemplates(_pfId?: string) {
   const response = await fetch(
-    `${SOLAPI_BASE_URL}/kakao/v2/templates?pfId=${pfId}`,
+    `${SOLAPI_BASE_URL}/kakao/v2/templates`,
     { headers: getHeaders(), cache: 'no-store' }
   )
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   MessageCircle, Loader2, Send, Plus, X, Phone, ChevronDown,
-  Upload, FileSpreadsheet, Clock
+  Upload, FileSpreadsheet, Clock, Users, ChevronRight, Check
 } from 'lucide-react'
 import { normalizePhoneNumber, formatPhoneDisplay } from '@/lib/utils/phone'
 import { parseContactsFromCSV } from '@/lib/utils/csv-parser'
@@ -50,6 +50,15 @@ function KakaoSendContent() {
   const [scheduledDate, setScheduledDate] = useState('')
   const [scheduledTime, setScheduledTime] = useState('')
 
+  // HubSpot picker
+  const [showHubSpotPicker, setShowHubSpotPicker] = useState(false)
+  const [hubSpotForms, setHubSpotForms] = useState<{ id: string; name: string }[]>([])
+  const [hubSpotFormsLoading, setHubSpotFormsLoading] = useState(false)
+  const [selectedFormId, setSelectedFormId] = useState<string | null>(null)
+  const [hubSpotContacts, setHubSpotContacts] = useState<{ phone: string; name?: string }[]>([])
+  const [hubSpotContactsLoading, setHubSpotContactsLoading] = useState(false)
+  const [checkedPhones, setCheckedPhones] = useState<Set<string>>(new Set())
+
   // Send state
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState('')
@@ -62,10 +71,17 @@ function KakaoSendContent() {
         const data = await res.json()
         const tpls = data.templates || []
         // Only show approved templates
-        setTemplates(tpls.filter((t: KakaoTemplate) => {
+        const approved = tpls.filter((t: KakaoTemplate) => {
           const status = (t.inspectionStatus || t.status || '').toUpperCase()
           return status === 'APPROVED' || status === 'APR'
-        }))
+        })
+        setTemplates(approved)
+        // Auto-select if templateId passed via URL
+        const templateIdParam = searchParams.get('templateId')
+        if (templateIdParam) {
+          const found = approved.find((t: KakaoTemplate) => t.templateId === templateIdParam)
+          if (found) setSelectedTemplate(found)
+        }
       } catch (err) {
         console.error('템플릿 조회 실패:', err)
       } finally {
@@ -73,7 +89,7 @@ function KakaoSendContent() {
       }
     }
     fetchTemplates()
-  }, [])
+  }, [searchParams])
 
   // Fetch sender numbers
   useEffect(() => {
@@ -159,6 +175,58 @@ function KakaoSendContent() {
     if (file && (file.name.endsWith('.csv') || file.name.endsWith('.txt') || file.type.includes('csv') || file.type.includes('text'))) {
       handleCSVFileUpload(file)
     } else { setCsvMessage('CSV 또는 TXT 파일만 지원합니다.') }
+  }
+
+  const openHubSpotPicker = async () => {
+    setShowHubSpotPicker(true)
+    setSelectedFormId(null)
+    setHubSpotContacts([])
+    setCheckedPhones(new Set())
+    if (hubSpotForms.length === 0) {
+      setHubSpotFormsLoading(true)
+      try {
+        const res = await fetch('/api/contacts/hubspot-forms?action=forms')
+        const data = await res.json()
+        setHubSpotForms(data.forms || [])
+      } catch { /* ignore */ }
+      finally { setHubSpotFormsLoading(false) }
+    }
+  }
+
+  const selectHubSpotForm = async (formId: string) => {
+    setSelectedFormId(formId)
+    setHubSpotContacts([])
+    setCheckedPhones(new Set())
+    setHubSpotContactsLoading(true)
+    try {
+      const res = await fetch(`/api/contacts/hubspot-forms?action=submissions&formId=${formId}`)
+      const data = await res.json()
+      const contacts = (data.contacts || [])
+        .map((c: { properties: { phone?: string; firstname?: string; lastname?: string } }) => ({
+          phone: c.properties.phone || '',
+          name: [c.properties.firstname, c.properties.lastname].filter(Boolean).join(' ') || undefined,
+        }))
+        .filter((c: { phone: string }) => c.phone.length >= 10)
+      setHubSpotContacts(contacts)
+    } catch { /* ignore */ }
+    finally { setHubSpotContactsLoading(false) }
+  }
+
+  const toggleHubSpotContact = (phone: string) => {
+    setCheckedPhones(prev => {
+      const next = new Set(prev)
+      if (next.has(phone)) next.delete(phone)
+      else next.add(phone)
+      return next
+    })
+  }
+
+  const addHubSpotContacts = () => {
+    const existingPhones = new Set(recipients.map(r => r.phone))
+    const toAdd = hubSpotContacts
+      .filter(c => checkedPhones.has(c.phone) && !existingPhones.has(c.phone))
+    if (toAdd.length > 0) setRecipients(prev => [...prev, ...toAdd])
+    setShowHubSpotPicker(false)
   }
 
   const addRecipient = () => {
@@ -394,6 +462,20 @@ function KakaoSendContent() {
             }`}>{csvMessage}</div>
           )}
 
+          {/* HubSpot form picker button */}
+          <button
+            type="button"
+            onClick={openHubSpotPicker}
+            className="mb-3 flex w-full items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-left transition-colors hover:bg-orange-100"
+          >
+            <Users className="h-5 w-5 flex-shrink-0 text-orange-500" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-orange-800">HubSpot 양식에서 가져오기</p>
+              <p className="text-xs text-orange-600">양식 제출자를 수신자로 추가합니다</p>
+            </div>
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-orange-400" />
+          </button>
+
           {/* Manual phone input */}
           <div className="mb-4 flex gap-2">
             <input
@@ -461,6 +543,119 @@ function KakaoSendContent() {
           {sending ? '처리 중...' : isScheduled ? '알림톡 예약 발송' : '알림톡 발송하기'}
         </button>
       </div>
+
+      {/* HubSpot Form Picker Modal */}
+      {showHubSpotPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowHubSpotPicker(false)}>
+          <div className="flex w-full max-w-2xl flex-col rounded-xl bg-white shadow-2xl" style={{ maxHeight: '80vh' }} onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-orange-500" />
+                <h2 className="text-lg font-semibold text-gray-900">HubSpot 양식에서 수신자 추가</h2>
+              </div>
+              <button onClick={() => setShowHubSpotPicker(false)} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex min-h-0 flex-1 overflow-hidden">
+              {/* Left: Forms list */}
+              <div className="w-56 flex-shrink-0 overflow-y-auto border-r border-gray-200 bg-gray-50">
+                <p className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gray-500">양식 선택</p>
+                {hubSpotFormsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  </div>
+                ) : hubSpotForms.length === 0 ? (
+                  <p className="px-4 py-4 text-sm text-gray-500">양식이 없습니다.</p>
+                ) : hubSpotForms.map(form => (
+                  <button
+                    key={form.id}
+                    onClick={() => selectHubSpotForm(form.id)}
+                    className={`w-full px-4 py-3 text-left text-sm transition-colors hover:bg-white ${
+                      selectedFormId === form.id ? 'bg-white font-semibold text-orange-700' : 'text-gray-700'
+                    }`}
+                  >
+                    {form.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right: Contacts list */}
+              <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                {!selectedFormId ? (
+                  <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+                    왼쪽에서 양식을 선택하세요
+                  </div>
+                ) : hubSpotContactsLoading ? (
+                  <div className="flex flex-1 items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                  </div>
+                ) : hubSpotContacts.length === 0 ? (
+                  <div className="flex flex-1 items-center justify-center text-sm text-gray-400">
+                    이 양식의 제출 데이터가 없습니다.
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2.5">
+                      <span className="text-sm text-gray-600">{hubSpotContacts.length}명 · {checkedPhones.size}명 선택됨</span>
+                      <button
+                        onClick={() => {
+                          if (checkedPhones.size === hubSpotContacts.length) setCheckedPhones(new Set())
+                          else setCheckedPhones(new Set(hubSpotContacts.map(c => c.phone)))
+                        }}
+                        className="text-xs text-orange-600 hover:underline"
+                      >
+                        {checkedPhones.size === hubSpotContacts.length ? '전체 해제' : '전체 선택'}
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      {hubSpotContacts.map(contact => (
+                        <label
+                          key={contact.phone}
+                          className="flex cursor-pointer items-center gap-3 border-b border-gray-100 px-4 py-2.5 last:border-b-0 hover:bg-orange-50"
+                        >
+                          <div className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded border-2 transition-colors ${
+                            checkedPhones.has(contact.phone)
+                              ? 'border-orange-500 bg-orange-500'
+                              : 'border-gray-300 bg-white'
+                          }`} onClick={() => toggleHubSpotContact(contact.phone)}>
+                            {checkedPhones.has(contact.phone) && <Check className="h-3 w-3 text-white" />}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            {contact.name && <p className="text-sm font-medium text-gray-900">{contact.name}</p>}
+                            <p className="text-sm text-gray-600">{contact.phone}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Modal footer */}
+            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+              <span className="text-sm text-gray-500">
+                {checkedPhones.size > 0 ? `${checkedPhones.size}명 선택됨` : '수신자를 선택해주세요'}
+              </span>
+              <div className="flex gap-2">
+                <button onClick={() => setShowHubSpotPicker(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                  취소
+                </button>
+                <button
+                  onClick={addHubSpotContacts}
+                  disabled={checkedPhones.size === 0}
+                  className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                >
+                  수신자 추가 ({checkedPhones.size}명)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

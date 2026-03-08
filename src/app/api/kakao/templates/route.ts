@@ -11,7 +11,8 @@ export async function GET() {
       )
     }
 
-    const data = await getKakaoTemplates(pfId)
+    const data = await getKakaoTemplates()
+    console.log('SOLAPI kakao templates raw response:', JSON.stringify(data).slice(0, 500))
 
     // SOLAPI returns { templateList: [...] } or similar structure
     const templates = data?.templateList || data?.templates || (Array.isArray(data) ? data : [])

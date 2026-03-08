@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { listForms, getFormSubmissions, extractContactFromSubmission } from '@/lib/hubspot/forms'
+import { listForms, getFormSubmissions, getFormSubmissionCount, extractContactFromSubmission } from '@/lib/hubspot/forms'
 
 // GET /api/contacts/hubspot-forms?action=forms
 // GET /api/contacts/hubspot-forms?action=submissions&formId=xxx
+// GET /api/contacts/hubspot-forms?action=counts&formIds=id1,id2,id3
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -57,7 +58,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ contacts, total: submissions.length })
     }
 
-    return NextResponse.json({ error: 'action 파라미터가 필요합니다 (forms 또는 submissions)' }, { status: 400 })
+    if (action === 'counts') {
+      const formIds = searchParams.get('formIds')?.split(',').filter(Boolean) || []
+      if (formIds.length === 0) return NextResponse.json({ counts: {} })
+
+      const results = await Promise.all(
+        formIds.map(async (id) => {
+          const count = await getFormSubmissionCount(id)
+          return [id, count] as [string, number]
+        })
+      )
+      return NextResponse.json({ counts: Object.fromEntries(results) })
+    }
+
+    return NextResponse.json({ error: 'action 파라미터가 필요합니다 (forms, submissions, counts)' }, { status: 400 })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     console.error('HubSpot Forms error:', message)

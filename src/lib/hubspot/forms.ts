@@ -67,6 +67,19 @@ export async function getFormSubmissions(formId: string, limit: number = 50): Pr
 }
 
 /**
+ * 특정 폼의 제출 건수만 조회 (limit=1로 빠르게)
+ */
+export async function getFormSubmissionCount(formId: string): Promise<number> {
+  const response = await fetch(
+    `${HUBSPOT_BASE_URL}/form-integrations/v1/submissions/forms/${formId}?limit=1`,
+    { headers: getHeaders(), cache: 'no-store' }
+  )
+  if (!response.ok) return 0
+  const data = await response.json()
+  return typeof data.total === 'number' ? data.total : (data.results?.length ?? 0)
+}
+
+/**
  * 폼 제출 데이터에서 연락처 정보 추출
  */
 export function extractContactFromSubmission(submission: HubSpotFormSubmission): {
