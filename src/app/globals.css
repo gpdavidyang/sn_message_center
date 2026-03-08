@@ -24,3 +24,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure form elements always have readable text/background regardless of system color scheme */
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="range"]),
+select,
+textarea {
+  background-color: #ffffff;
+  color: #111827;
+}

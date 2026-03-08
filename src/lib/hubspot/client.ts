@@ -98,6 +98,41 @@ export async function searchContacts(
   return response.json()
 }
 
+// Search contacts across multiple fields (name, phone, email) with OR logic
+export async function searchContactsMultiField(
+  query: string,
+  limit: number = 10
+): Promise<HubSpotContactsResponse> {
+  const q = query.trim()
+  const body: Record<string, unknown> = {
+    filterGroups: [
+      { filters: [{ propertyName: 'email', operator: 'CONTAINS_TOKEN', value: `*${q}*` }] },
+      { filters: [{ propertyName: 'phone', operator: 'CONTAINS_TOKEN', value: `*${q}*` }] },
+      { filters: [{ propertyName: 'firstname', operator: 'CONTAINS_TOKEN', value: `*${q}*` }] },
+      { filters: [{ propertyName: 'lastname', operator: 'CONTAINS_TOKEN', value: `*${q}*` }] },
+    ],
+    properties: ['firstname', 'lastname', 'email', 'phone', 'company'],
+    limit,
+  }
+
+  const response = await fetch(
+    `${HUBSPOT_BASE_URL}/crm/v3/objects/contacts/search`,
+    {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    }
+  )
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`HubSpot Search Error: ${error.message || response.statusText}`)
+  }
+
+  return response.json()
+}
+
 // Get contact properties (schema)
 export async function getContactProperties() {
   const response = await fetch(

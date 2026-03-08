@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   MessageCircle, Loader2, Send, Plus, X, Phone, ChevronDown,
-  Upload, FileSpreadsheet, Clock, Users, ChevronRight, Check
+  Upload, FileSpreadsheet, Clock, Users, ChevronRight, Check, Search
 } from 'lucide-react'
 import { normalizePhoneNumber, formatPhoneDisplay } from '@/lib/utils/phone'
 import { parseContactsFromCSV } from '@/lib/utils/csv-parser'
@@ -27,6 +27,7 @@ interface KakaoTemplate {
 function KakaoSendContent() {
   const searchParams = useSearchParams()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const contactSearchRef = useRef<HTMLDivElement>(null)
 
   // Template states
   const [templates, setTemplates] = useState<KakaoTemplate[]>([])
@@ -58,6 +59,12 @@ function KakaoSendContent() {
   const [hubSpotContacts, setHubSpotContacts] = useState<{ phone: string; name?: string }[]>([])
   const [hubSpotContactsLoading, setHubSpotContactsLoading] = useState(false)
   const [checkedPhones, setCheckedPhones] = useState<Set<string>>(new Set())
+
+  // Contact search
+  const [contactSearch, setContactSearch] = useState('')
+  const [searchResults, setSearchResults] = useState<{ id: string; name: string; phone: string; email: string; company: string }[]>([])
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
 
   // Send state
   const [sending, setSending] = useState(false)
@@ -132,6 +139,35 @@ function KakaoSendContent() {
       return () => document.removeEventListener('click', handleClickOutside)
     }
   }, [senderDropdownOpen])
+
+  // Debounced contact search
+  useEffect(() => {
+    if (!contactSearch.trim() || contactSearch.trim().length < 2) {
+      setSearchResults([]); setShowSearchDropdown(false); return
+    }
+    const timer = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const res = await fetch(`/api/contacts/search?q=${encodeURIComponent(contactSearch)}`)
+        const data = await res.json()
+        setSearchResults(data.contacts || [])
+        setShowSearchDropdown(true)
+      } catch { /* ignore */ }
+      finally { setSearchLoading(false) }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [contactSearch])
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (contactSearchRef.current && !contactSearchRef.current.contains(e.target as Node)) {
+        setShowSearchDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   // CSV handlers
   const addContactsFromCSV = (csvText: string) => {
@@ -227,6 +263,16 @@ function KakaoSendContent() {
       .filter(c => checkedPhones.has(c.phone) && !existingPhones.has(c.phone))
     if (toAdd.length > 0) setRecipients(prev => [...prev, ...toAdd])
     setShowHubSpotPicker(false)
+  }
+
+  const addFromSearch = (contact: { name: string; phone: string }) => {
+    const cleaned = normalizePhoneNumber(contact.phone)
+    if (cleaned.length < 10) return
+    if (!recipients.some(r => r.phone === cleaned)) {
+      setRecipients(prev => [...prev, { phone: cleaned, name: contact.name || undefined }])
+    }
+    setContactSearch('')
+    setShowSearchDropdown(false)
   }
 
   const addRecipient = () => {
@@ -476,6 +522,64 @@ function KakaoSendContent() {
             <ChevronRight className="h-4 w-4 flex-shrink-0 text-orange-400" />
           </button>
 
+          {/* Contact search */}
+          <div className="relative mb-3" ref={contactSearchRef}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              {searchLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+              )}
+              {!searchLoading && contactSearch && (
+                <button
+                  type="button"
+                  onClick={() => { setContactSearch(''); setShowSearchDropdown(false) }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <input
+                type="text"
+                value={contactSearch}
+                onChange={(e) => setContactSearch(e.target.value)}
+                onFocus={() => searchResults.length > 0 && setShowSearchDropdown(true)}
+                placeholder="연락처 검색 (이름, 전화번호, 이메일...)"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-10 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+              />
+            </div>
+            {showSearchDropdown && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                {searchResults.length === 0 ? (
+                  <p className="px-4 py-3 text-center text-sm text-gray-500">검색 결과가 없습니다.</p>
+                ) : (
+                  searchResults.map((contact) => {
+                    const cleaned = normalizePhoneNumber(contact.phone)
+                    const isAdded = recipients.some(r => r.phone === cleaned)
+                    return (
+                      <button
+                        key={contact.id}
+                        type="button"
+                        onClick={() => addFromSearch(contact)}
+                        disabled={isAdded}
+                        className="flex w-full items-center justify-between gap-3 border-b border-gray-100 px-4 py-2.5 text-left last:border-b-0 hover:bg-yellow-50 disabled:cursor-default disabled:opacity-60"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            {contact.name && <p className="truncate text-sm font-medium text-gray-900">{contact.name}</p>}
+                            {isAdded && <span className="shrink-0 text-xs text-yellow-600">✓ 추가됨</span>}
+                          </div>
+                          <p className="text-xs text-gray-600">{contact.phone}</p>
+                          {contact.email && <p className="truncate text-xs text-gray-400">{contact.email}</p>}
+                        </div>
+                        {!isAdded && <Plus className="h-4 w-4 shrink-0 text-yellow-500" />}
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Manual phone input */}
           <div className="mb-4 flex gap-2">
             <input
@@ -484,7 +588,7 @@ function KakaoSendContent() {
               onChange={(e) => setNewPhone(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addRecipient())}
               onPaste={handlePaste}
-              placeholder="전화번호 입력 또는 데이터 붙여넣기"
+              placeholder="전화번호 직접 입력"
               className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
             />
             <button onClick={addRecipient} className="rounded-lg bg-gray-100 p-2.5 text-gray-700 hover:bg-gray-200">
@@ -496,7 +600,7 @@ function KakaoSendContent() {
           <div className="max-h-64 space-y-2 overflow-y-auto">
             {recipients.length === 0 ? (
               <p className="py-4 text-center text-sm text-gray-500">
-                수신자를 추가해주세요.<br />CSV 업로드, 붙여넣기, 또는 HubSpot에서 가져올 수 있습니다.
+                수신자를 추가해주세요.<br />CSV 업로드, 검색, 또는 HubSpot에서 가져올 수 있습니다.
               </p>
             ) : (
               recipients.map((r, idx) => (

@@ -135,13 +135,13 @@ export default function CampaignsPage() {
           href="/messages/compose"
           className="flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
         >
-          <PenLine className="h-4 w-4" /> 문자(SMS/LMS) 작성
+          <PenLine className="h-4 w-4" /> 문자 작성
         </Link>
         <Link
           href="/kakao/send"
           className="flex items-center gap-1.5 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-100"
         >
-          <Send className="h-4 w-4" /> 알림톡 발송
+          <Send className="h-4 w-4" /> 알림톡 작성
         </Link>
       </div>
 
@@ -253,7 +253,7 @@ export default function CampaignsPage() {
               문자 작성하기
             </Link>
             <Link href="/kakao/send" className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-600">
-              알림톡 발송하기
+              알림톡 작성하기
             </Link>
           </div>
         </div>

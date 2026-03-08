@@ -417,7 +417,7 @@ export default function HubSpotContactsPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="이름, 이메일로 검색..."
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <button type="submit" className="rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200">
@@ -513,7 +513,7 @@ export default function HubSpotContactsPage() {
                   value={formsSearch}
                   onChange={e => setFormsSearch(e.target.value)}
                   placeholder="양식명 검색..."
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 {formsSearch && (
                   <button onClick={() => setFormsSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -719,7 +719,7 @@ export default function HubSpotContactsPage() {
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
                     placeholder="회사 검색..."
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -728,7 +728,7 @@ export default function HubSpotContactsPage() {
                   <select
                     value={lifecyclestage}
                     onChange={(e) => setLifecyclestage(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
                   >
                     <option value="">전체</option>
                     {LIFECYCLE_STAGES.map(s => (
@@ -743,7 +743,7 @@ export default function HubSpotContactsPage() {
                     type="date"
                     value={createdAfter}
                     onChange={(e) => setCreatedAfter(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -753,7 +753,7 @@ export default function HubSpotContactsPage() {
                     type="date"
                     value={createdBefore}
                     onChange={(e) => setCreatedBefore(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -778,7 +778,7 @@ export default function HubSpotContactsPage() {
                     <select
                       value={selectedForm}
                       onChange={(e) => handleFormSelect(e.target.value)}
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                      className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
                     >
                       <option value="">전체 연락처</option>
                       {forms.map(f => (

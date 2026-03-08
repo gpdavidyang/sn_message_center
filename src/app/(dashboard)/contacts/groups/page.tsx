@@ -163,7 +163,7 @@ export default function ContactGroupsPage() {
             <label className="mb-1 block text-sm font-medium text-gray-700">그룹 이름</label>
             <input
               type="text" value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
               required
             />
           </div>
@@ -171,7 +171,7 @@ export default function ContactGroupsPage() {
             <label className="mb-1 block text-sm font-medium text-gray-700">설명 (선택)</label>
             <input
               type="text" value={description} onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
             />
           </div>
           <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">

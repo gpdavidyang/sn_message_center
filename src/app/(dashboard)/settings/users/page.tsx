@@ -124,7 +124,7 @@ export default function UserManagementPage() {
               <input
                 type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="user@example.com" required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
@@ -132,7 +132,7 @@ export default function UserManagementPage() {
               <input
                 type="text" value={inviteName} onChange={(e) => setInviteName(e.target.value)}
                 placeholder="홍길동"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>

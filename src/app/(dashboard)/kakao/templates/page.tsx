@@ -595,7 +595,7 @@ export default function KakaoTemplatesPage() {
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="예: 주문 완료 알림"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
                 />
               </div>
 
@@ -605,7 +605,7 @@ export default function KakaoTemplatesPage() {
                 <select
                   value={form.categoryCode}
                   onChange={e => setForm(f => ({ ...f, categoryCode: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
                 >
                   {CATEGORY_OPTIONS.map(c => (
                     <option key={c.code} value={c.code}>{c.code} - {c.label}</option>
@@ -624,7 +624,7 @@ export default function KakaoTemplatesPage() {
                   onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
                   rows={8}
                   placeholder={"안녕하세요, #{이름}님!\n주문이 완료되었습니다.\n주문번호: #{주문번호}"}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-mono focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none focus:ring-1 focus:ring-yellow-500"
                 />
               </div>
 
@@ -659,7 +659,7 @@ export default function KakaoTemplatesPage() {
                           <select
                             value={btn.type}
                             onChange={e => updateButton(idx, 'type', e.target.value)}
-                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs focus:border-yellow-500 focus:outline-none"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 focus:border-yellow-500 focus:outline-none"
                           >
                             {BUTTON_TYPES.map(t => (
                               <option key={t.value} value={t.value}>{t.label}</option>
@@ -673,7 +673,7 @@ export default function KakaoTemplatesPage() {
                             value={btn.name}
                             onChange={e => updateButton(idx, 'name', e.target.value)}
                             placeholder="자세히 보기"
-                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs focus:border-yellow-500 focus:outline-none"
+                            className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none"
                           />
                         </div>
                         {(btn.type === 'WL' || btn.type === 'AL') && (
@@ -685,7 +685,7 @@ export default function KakaoTemplatesPage() {
                                 value={btn.linkMo || ''}
                                 onChange={e => updateButton(idx, 'linkMo', e.target.value)}
                                 placeholder="https://example.com"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs focus:border-yellow-500 focus:outline-none"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none"
                               />
                             </div>
                             <div>
@@ -695,7 +695,7 @@ export default function KakaoTemplatesPage() {
                                 value={btn.linkPc || ''}
                                 onChange={e => updateButton(idx, 'linkPc', e.target.value)}
                                 placeholder="https://example.com"
-                                className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs focus:border-yellow-500 focus:outline-none"
+                                className="w-full rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs text-gray-900 placeholder:text-gray-400 focus:border-yellow-500 focus:outline-none"
                               />
                             </div>
                           </>

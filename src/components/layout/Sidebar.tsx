@@ -38,7 +38,7 @@ const navigation = [
     href: '/messages',
     icon: MessageSquare,
     children: [
-      { name: '메시지 작성', href: '/messages/compose' },
+      { name: '문자 작성', href: '/messages/compose' },
     ],
   },
   {
@@ -47,7 +47,7 @@ const navigation = [
     icon: MessageCircle,
     children: [
       { name: '템플릿 관리', href: '/kakao/templates' },
-      { name: '알림톡 발송', href: '/kakao/send' },
+      { name: '알림톡 작성', href: '/kakao/send' },
     ],
   },
   {
