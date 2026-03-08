@@ -6,7 +6,7 @@ import {
   MessageCircle, Loader2, RefreshCw, ExternalLink,
   CheckCircle, Clock, XCircle, AlertTriangle,
   LayoutGrid, List, Send, Plus, Pencil, Trash2,
-  X, ClipboardCheck, ChevronDown, ChevronUp,
+  X, ClipboardCheck, ChevronDown, ChevronUp, Copy,
 } from 'lucide-react'
 
 interface KakaoButton {
@@ -93,6 +93,7 @@ export default function KakaoTemplatesPage() {
   // Modal state
   const [showModal, setShowModal] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<KakaoTemplate | null>(null)
+  const [isDuplicate, setIsDuplicate] = useState(false)
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
   const [modalError, setModalError] = useState('')
@@ -133,6 +134,7 @@ export default function KakaoTemplatesPage() {
   // ─── Modal ───
   const openCreate = () => {
     setEditingTemplate(null)
+    setIsDuplicate(false)
     setForm(emptyForm())
     setModalError('')
     setShowModal(true)
@@ -140,8 +142,22 @@ export default function KakaoTemplatesPage() {
 
   const openEdit = (tpl: KakaoTemplate) => {
     setEditingTemplate(tpl)
+    setIsDuplicate(false)
     setForm({
       name: tpl.name,
+      content: tpl.content,
+      categoryCode: tpl.categoryCode || '004',
+      buttons: tpl.buttons ? [...tpl.buttons.map(b => ({ ...b }))] : [],
+    })
+    setModalError('')
+    setShowModal(true)
+  }
+
+  const openDuplicate = (tpl: KakaoTemplate) => {
+    setEditingTemplate(null)   // null → POST (새 템플릿으로 생성)
+    setIsDuplicate(true)
+    setForm({
+      name: `${tpl.name} (복사)`,
       content: tpl.content,
       categoryCode: tpl.categoryCode || '004',
       buttons: tpl.buttons ? [...tpl.buttons.map(b => ({ ...b }))] : [],
@@ -153,6 +169,7 @@ export default function KakaoTemplatesPage() {
   const closeModal = () => {
     setShowModal(false)
     setEditingTemplate(null)
+    setIsDuplicate(false)
     setModalError('')
   }
 
@@ -414,6 +431,13 @@ export default function KakaoTemplatesPage() {
                           </button>
                         )}
                         <button
+                          onClick={() => openDuplicate(tpl)}
+                          title="복제"
+                          className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-100"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                        <button
                           onClick={() => setDeletingId(tpl.templateId)}
                           title="삭제"
                           className="rounded-lg border border-red-200 p-1.5 text-red-400 hover:bg-red-50"
@@ -514,6 +538,12 @@ export default function KakaoTemplatesPage() {
                       </button>
                     )}
                     <button
+                      onClick={() => openDuplicate(tpl)}
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      <Copy className="h-3 w-3" /> 복제
+                    </button>
+                    <button
                       onClick={() => setDeletingId(tpl.templateId)}
                       className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50"
                     >
@@ -547,7 +577,7 @@ export default function KakaoTemplatesPage() {
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-yellow-500" />
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {editingTemplate ? '템플릿 수정' : '새 템플릿 만들기'}
+                  {editingTemplate ? '템플릿 수정' : isDuplicate ? '템플릿 복제' : '새 템플릿 만들기'}
                 </h2>
               </div>
               <button onClick={closeModal} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100">
@@ -683,7 +713,11 @@ export default function KakaoTemplatesPage() {
               )}
 
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-700">
-                💡 저장 후 <strong>검수 요청</strong>을 해야 카카오로 심사가 접수됩니다. 승인된 템플릿만 발송 가능합니다.
+                {isDuplicate ? (
+                  <>💡 복제된 템플릿은 새 템플릿으로 생성됩니다. 저장 후 내용을 수정하고 <strong>검수 요청</strong>을 해야 카카오로 심사가 접수됩니다.</>
+                ) : (
+                  <>💡 저장 후 <strong>검수 요청</strong>을 해야 카카오로 심사가 접수됩니다. 승인된 템플릿만 발송 가능합니다.</>
+                )}
               </div>
             </div>
 
@@ -698,7 +732,7 @@ export default function KakaoTemplatesPage() {
                 className="flex items-center gap-2 rounded-lg bg-yellow-500 px-5 py-2 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
               >
                 {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-                {editingTemplate ? '수정 저장' : '템플릿 생성'}
+                {editingTemplate ? '수정 저장' : isDuplicate ? '복제본 생성' : '템플릿 생성'}
               </button>
             </div>
           </div>
